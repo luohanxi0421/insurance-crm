@@ -20,7 +20,7 @@ export default function LoginScreen({ navigation }: any) {
 
   const handleLogin = async () => {
     if (!email.trim() || !password.trim()) {
-      Alert.alert('Validation', 'Please input email and password.');
+      Alert.alert('校验失败', '请输入邮箱和密码。');
       return;
     }
 
@@ -32,7 +32,7 @@ export default function LoginScreen({ navigation }: any) {
       }
       setUser(data.user);
     } catch (err: any) {
-      Alert.alert('Login failed', err?.message || 'Unknown error');
+      Alert.alert('登录失败', err?.message || '未知错误');
     } finally {
       setLoading(false);
     }
@@ -44,12 +44,12 @@ export default function LoginScreen({ navigation }: any) {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <View style={styles.content}>
-        <Text style={styles.title}>Insurance CRM</Text>
-        <Text style={styles.subtitle}>Sign in to continue</Text>
+        <Text style={styles.title}>保险客户管理</Text>
+        <Text style={styles.subtitle}>登录后继续使用</Text>
 
         <TextInput
           style={styles.input}
-          placeholder="Email"
+          placeholder="邮箱"
           value={email}
           onChangeText={setEmail}
           keyboardType="email-address"
@@ -59,7 +59,7 @@ export default function LoginScreen({ navigation }: any) {
 
         <TextInput
           style={styles.input}
-          placeholder="Password"
+          placeholder="密码"
           value={password}
           onChangeText={setPassword}
           secureTextEntry
@@ -70,11 +70,11 @@ export default function LoginScreen({ navigation }: any) {
           onPress={handleLogin}
           disabled={loading}
         >
-          <Text style={styles.buttonText}>{loading ? 'Signing in...' : 'Sign In'}</Text>
+          <Text style={styles.buttonText}>{loading ? '登录中...' : '登录'}</Text>
         </TouchableOpacity>
 
         <TouchableOpacity onPress={() => navigation.navigate('Register')}>
-          <Text style={styles.linkText}>No account? Create one</Text>
+          <Text style={styles.linkText}>没有账号？去注册</Text>
         </TouchableOpacity>
       </View>
     </KeyboardAvoidingView>

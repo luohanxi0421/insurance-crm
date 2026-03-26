@@ -30,10 +30,6 @@ export default function ClientFormScreen({ route, navigation }: Props) {
   const [phone, setPhone] = useState('');
   const [birthDate, setBirthDate] = useState('');
   const [birthdayType, setBirthdayType] = useState<'solar' | 'lunar'>('solar');
-  const [lunarMonth, setLunarMonth] = useState('');
-  const [lunarDay, setLunarDay] = useState('');
-  const [lunarIsLeap, setLunarIsLeap] = useState(false);
-  const [lunarLeapOrder, setLunarLeapOrder] = useState('1');
   const [notes, setNotes] = useState('');
   const [saving, setSaving] = useState(false);
 
@@ -51,13 +47,9 @@ export default function ClientFormScreen({ route, navigation }: Props) {
       setPhone(c.phone || '');
       setBirthDate(c.birth_date ? c.birth_date.split('T')[0] : '');
       setBirthdayType(c.birthday_type || 'solar');
-      setLunarMonth(c.lunar_birthday_month ? String(c.lunar_birthday_month) : '');
-      setLunarDay(c.lunar_birthday_day ? String(c.lunar_birthday_day) : '');
-      setLunarIsLeap(Boolean(c.lunar_is_leap_month));
-      setLunarLeapOrder(c.lunar_leap_month_order ? String(c.lunar_leap_month_order) : '1');
       setNotes(c.notes || '');
     } catch {
-      Alert.alert('Error', 'Failed to load client data.');
+      Alert.alert('错误', '加载客户数据失败。');
     }
   };
 
@@ -69,46 +61,23 @@ export default function ClientFormScreen({ route, navigation }: Props) {
     }
 
     if (!name.trim()) {
-      Alert.alert('Validation', 'Client name is required.');
+      Alert.alert('校验失败', '客户姓名不能为空。');
       return;
     }
 
-    if (birthdayType === 'solar') {
-      if (birthDate && !validDate(birthDate)) {
-        Alert.alert('Validation', 'Solar birthday must be YYYY-MM-DD format.');
-        return;
-      }
-    } else {
-      const month = Number(lunarMonth);
-      const day = Number(lunarDay);
-      if (!month || month < 1 || month > 12) {
-        Alert.alert('Validation', 'Lunar month must be 1-12.');
-        return;
-      }
-      if (!day || day < 1 || day > 30) {
-        Alert.alert('Validation', 'Lunar day must be 1-30.');
-        return;
-      }
-      if (lunarIsLeap && !['1', '2'].includes(lunarLeapOrder)) {
-        Alert.alert('Validation', 'Leap month order must be 1 or 2.');
-        return;
-      }
+    if (birthDate && !validDate(birthDate)) {
+      Alert.alert('校验失败', '生日格式必须为 YYYY-MM-DD。');
+      return;
     }
 
     setSaving(true);
     try {
       const payload: any = {
-        user_id: user.id,
         name: name.trim(),
         gender: gender || null,
         phone: phone.trim() || null,
         birthday_type: birthdayType,
-        birth_date: birthdayType === 'solar' ? birthDate || null : null,
-        lunar_birthday_month: birthdayType === 'lunar' ? Number(lunarMonth) || null : null,
-        lunar_birthday_day: birthdayType === 'lunar' ? Number(lunarDay) || null : null,
-        lunar_is_leap_month: birthdayType === 'lunar' ? lunarIsLeap : null,
-        lunar_leap_month_order:
-          birthdayType === 'lunar' && lunarIsLeap ? Number(lunarLeapOrder) || null : null,
+        birth_date: birthDate || null,
         notes: notes.trim() || null,
       };
 
@@ -122,7 +91,7 @@ export default function ClientFormScreen({ route, navigation }: Props) {
 
       navigation.goBack();
     } catch (err: any) {
-      Alert.alert('Save failed', err?.message || 'Unknown error');
+      Alert.alert('保存失败', err?.message || '未知错误');
     } finally {
       setSaving(false);
     }
@@ -130,10 +99,10 @@ export default function ClientFormScreen({ route, navigation }: Props) {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Text style={styles.label}>Name *</Text>
-      <TextInput style={styles.input} value={name} onChangeText={setName} placeholder="Client name" />
+      <Text style={styles.label}>姓名 *</Text>
+      <TextInput style={styles.input} value={name} onChangeText={setName} placeholder="请输入客户姓名" />
 
-      <Text style={styles.label}>Gender</Text>
+      <Text style={styles.label}>性别</Text>
       <View style={styles.row}>
         {(['male', 'female'] as const).map((g) => (
           <TouchableOpacity
@@ -142,114 +111,55 @@ export default function ClientFormScreen({ route, navigation }: Props) {
             onPress={() => setGender(g)}
           >
             <Text style={[styles.choiceText, gender === g && styles.choiceTextActive]}>
-              {g === 'male' ? 'Male' : 'Female'}
+              {g === 'male' ? '男' : '女'}
             </Text>
           </TouchableOpacity>
         ))}
       </View>
 
-      <Text style={styles.label}>Phone</Text>
+      <Text style={styles.label}>手机号</Text>
       <TextInput
         style={styles.input}
         value={phone}
         onChangeText={setPhone}
-        placeholder="Phone number"
+        placeholder="请输入手机号"
         keyboardType="phone-pad"
       />
 
-      <Text style={styles.label}>Birthday Type</Text>
-      <View style={styles.row}>
-        {(['solar', 'lunar'] as const).map((type) => (
+      <Text style={styles.label}>生日类型</Text>
+      <Text style={styles.hint}>客户习惯过阳历生日还是阴历生日</Text>
+      <View style={styles.radioGroup}>
+        {([
+          { value: 'solar', label: '公历' },
+          { value: 'lunar', label: '农历' },
+        ] as const).map((item) => (
           <TouchableOpacity
-            key={type}
-            style={[styles.choiceButton, birthdayType === type && styles.choiceButtonActive]}
-            onPress={() => setBirthdayType(type)}
+            key={item.value}
+            style={styles.radioItem}
+            onPress={() => setBirthdayType(item.value)}
           >
-            <Text style={[styles.choiceText, birthdayType === type && styles.choiceTextActive]}>
-              {type === 'solar' ? 'Solar' : 'Lunar'}
-            </Text>
+            <View style={[styles.radioOuter, birthdayType === item.value && styles.radioOuterActive]}>
+              {birthdayType === item.value ? <View style={styles.radioInner} /> : null}
+            </View>
+            <Text style={styles.radioLabel}>{item.label}</Text>
           </TouchableOpacity>
         ))}
       </View>
 
-      {birthdayType === 'solar' ? (
-        <>
-          <Text style={styles.label}>Solar Birthday</Text>
-          <TextInput
-            style={styles.input}
-            value={birthDate}
-            onChangeText={setBirthDate}
-            placeholder="YYYY-MM-DD"
-          />
-        </>
-      ) : (
-        <>
-          <Text style={styles.label}>Lunar Month</Text>
-          <TextInput
-            style={styles.input}
-            value={lunarMonth}
-            onChangeText={setLunarMonth}
-            placeholder="1-12"
-            keyboardType="number-pad"
-          />
+      <Text style={styles.label}>生日</Text>
+      <TextInput
+        style={styles.input}
+        value={birthDate}
+        onChangeText={setBirthDate}
+        placeholder="YYYY-MM-DD"
+      />
 
-          <Text style={styles.label}>Lunar Day</Text>
-          <TextInput
-            style={styles.input}
-            value={lunarDay}
-            onChangeText={setLunarDay}
-            placeholder="1-30"
-            keyboardType="number-pad"
-          />
-
-          <Text style={styles.label}>Leap Month</Text>
-          <View style={styles.row}>
-            <TouchableOpacity
-              style={[styles.choiceButton, !lunarIsLeap && styles.choiceButtonActive]}
-              onPress={() => setLunarIsLeap(false)}
-            >
-              <Text style={[styles.choiceText, !lunarIsLeap && styles.choiceTextActive]}>No</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.choiceButton, lunarIsLeap && styles.choiceButtonActive]}
-              onPress={() => setLunarIsLeap(true)}
-            >
-              <Text style={[styles.choiceText, lunarIsLeap && styles.choiceTextActive]}>Yes</Text>
-            </TouchableOpacity>
-          </View>
-
-          {lunarIsLeap ? (
-            <>
-              <Text style={styles.label}>Leap Month Order</Text>
-              <View style={styles.row}>
-                <TouchableOpacity
-                  style={[styles.choiceButton, lunarLeapOrder === '1' && styles.choiceButtonActive]}
-                  onPress={() => setLunarLeapOrder('1')}
-                >
-                  <Text style={[styles.choiceText, lunarLeapOrder === '1' && styles.choiceTextActive]}>
-                    First
-                  </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[styles.choiceButton, lunarLeapOrder === '2' && styles.choiceButtonActive]}
-                  onPress={() => setLunarLeapOrder('2')}
-                >
-                  <Text style={[styles.choiceText, lunarLeapOrder === '2' && styles.choiceTextActive]}>
-                    Second
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            </>
-          ) : null}
-        </>
-      )}
-
-      <Text style={styles.label}>Notes</Text>
+      <Text style={styles.label}>备注</Text>
       <TextInput
         style={[styles.input, styles.textArea]}
         value={notes}
         onChangeText={setNotes}
-        placeholder="Notes"
+        placeholder="请输入备注"
         multiline
         numberOfLines={4}
       />
@@ -259,7 +169,7 @@ export default function ClientFormScreen({ route, navigation }: Props) {
         onPress={handleSave}
         disabled={saving}
       >
-        <Text style={styles.saveButtonText}>{saving ? 'Saving...' : 'Save'}</Text>
+        <Text style={styles.saveButtonText}>{saving ? '保存中...' : '保存'}</Text>
       </TouchableOpacity>
     </ScrollView>
   );
@@ -269,6 +179,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f5f5f5' },
   content: { padding: 16, paddingBottom: 40 },
   label: { fontSize: 14, color: '#666', marginTop: 16, marginBottom: 6 },
+  hint: { fontSize: 12, color: '#999', marginBottom: 4 },
   input: {
     backgroundColor: '#fff',
     borderWidth: 1,
@@ -279,6 +190,26 @@ const styles = StyleSheet.create({
   },
   textArea: { minHeight: 100, textAlignVertical: 'top' },
   row: { flexDirection: 'row', columnGap: 12 },
+  radioGroup: { rowGap: 10, marginTop: 4 },
+  radioItem: { flexDirection: 'row', alignItems: 'center' },
+  radioOuter: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    borderWidth: 2,
+    borderColor: '#bbb',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 10,
+  },
+  radioOuterActive: { borderColor: '#007AFF' },
+  radioInner: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#007AFF',
+  },
+  radioLabel: { fontSize: 15, color: '#333' },
   choiceButton: {
     flex: 1,
     padding: 12,

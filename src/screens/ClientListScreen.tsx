@@ -27,7 +27,7 @@ export default function ClientListScreen({ navigation }: any) {
       const data = await fetchClients(user.id);
       setClients(data);
     } catch {
-      Alert.alert('Error', 'Failed to load clients.');
+      Alert.alert('错误', '加载客户列表失败。');
     } finally {
       setLoading(false);
     }
@@ -38,10 +38,10 @@ export default function ClientListScreen({ navigation }: any) {
       headerRight: () => (
         <View style={styles.headerActions}>
           <TouchableOpacity onPress={() => navigation.navigate('BirthdayList')}>
-            <Text style={styles.headerLink}>Birthdays</Text>
+            <Text style={styles.headerLink}>生日</Text>
           </TouchableOpacity>
           <TouchableOpacity onPress={handleLogout}>
-            <Text style={[styles.headerLink, styles.logoutLink]}>Logout</Text>
+            <Text style={[styles.headerLink, styles.logoutLink]}>退出</Text>
           </TouchableOpacity>
         </View>
       ),
@@ -68,7 +68,7 @@ export default function ClientListScreen({ navigation }: any) {
         const data = await searchClients(user.id, searchQuery.trim());
         setClients(data);
       } catch {
-        Alert.alert('Error', 'Search failed.');
+        Alert.alert('错误', '搜索失败。');
       } finally {
         setLoading(false);
       }
@@ -78,17 +78,17 @@ export default function ClientListScreen({ navigation }: any) {
   }, [searchQuery, user, setLoading, setClients, loadClients]);
 
   const handleDelete = (id: string, name: string) => {
-    Alert.alert('Delete client', `Delete "${name}"?`, [
-      { text: 'Cancel', style: 'cancel' },
+    Alert.alert('删除客户', `确认删除“${name}”吗？`, [
+      { text: '取消', style: 'cancel' },
       {
-        text: 'Delete',
+        text: '删除',
         style: 'destructive',
         onPress: async () => {
           try {
             await deleteClient(id);
             removeClient(id);
           } catch {
-            Alert.alert('Error', 'Delete failed.');
+            Alert.alert('错误', '删除失败。');
           }
         },
       },
@@ -96,10 +96,10 @@ export default function ClientListScreen({ navigation }: any) {
   };
 
   const handleLogout = () => {
-    Alert.alert('Sign out', 'Do you want to sign out?', [
-      { text: 'Cancel', style: 'cancel' },
+    Alert.alert('退出登录', '确认退出当前账号吗？', [
+      { text: '取消', style: 'cancel' },
       {
-        text: 'Sign out',
+        text: '退出',
         style: 'destructive',
         onPress: async () => {
           await signOut();
@@ -118,12 +118,12 @@ export default function ClientListScreen({ navigation }: any) {
       <View style={styles.cardHeader}>
         <Text style={styles.name}>{item.name}</Text>
         <Text style={styles.gender}>
-          {item.gender === 'male' ? 'Male' : item.gender === 'female' ? 'Female' : ''}
+          {item.gender === 'male' ? '男' : item.gender === 'female' ? '女' : ''}
         </Text>
       </View>
       {item.phone ? <Text style={styles.phone}>{item.phone}</Text> : null}
       {item.birth_date ? (
-        <Text style={styles.birth}>Birthday: {new Date(item.birth_date).toLocaleDateString()}</Text>
+        <Text style={styles.birth}>生日：{new Date(item.birth_date).toLocaleDateString()}</Text>
       ) : null}
     </TouchableOpacity>
   );
@@ -133,7 +133,7 @@ export default function ClientListScreen({ navigation }: any) {
       <View style={styles.searchBar}>
         <TextInput
           style={styles.searchInput}
-          placeholder="Search by name"
+          placeholder="按姓名搜索"
           value={searchQuery}
           onChangeText={setSearchQuery}
         />
@@ -141,12 +141,12 @@ export default function ClientListScreen({ navigation }: any) {
 
       {loading ? (
         <View style={styles.emptyContainer}>
-          <Text style={styles.emptyText}>Loading...</Text>
+          <Text style={styles.emptyText}>加载中...</Text>
         </View>
       ) : clients.length === 0 ? (
         <View style={styles.emptyContainer}>
           <Text style={styles.emptyText}>
-            {searchQuery ? 'No matching clients.' : 'No client yet. Tap + to add one.'}
+            {searchQuery ? '没有匹配的客户。' : '还没有客户，点击 + 新增。'}
           </Text>
         </View>
       ) : (

@@ -1,6 +1,99 @@
-﻿-- RLS and birthday reminder function
--- Run in Supabase SQL editor.
+-- insurance-crm Supabase initialization script (latest)
+-- Includes: extensions, tables, indexes, triggers, RLS, policies, birthday reminder function.
+-- Safe to run multiple times (uses IF NOT EXISTS / DROP IF EXISTS where possible).
 
+BEGIN;
+
+-- Extensions
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
+-- ===== Tables =====
+
+CREATE TABLE IF NOT EXISTS public.clients (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  name text NOT NULL,
+  gender text CHECK (gender IN ('male', 'female') OR gender IS NULL),
+  phone text,
+  birth_date date,
+  birthday_type text NOT NULL DEFAULT 'solar' CHECK (birthday_type IN ('solar', 'lunar')),
+  notes text,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+
+-- Remove legacy lunar fields (no longer used by app)
+ALTER TABLE IF EXISTS public.clients DROP COLUMN IF EXISTS lunar_birthday_month;
+ALTER TABLE IF EXISTS public.clients DROP COLUMN IF EXISTS lunar_birthday_day;
+
+CREATE TABLE IF NOT EXISTS public.blood_relationships (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  person_id uuid NOT NULL REFERENCES public.clients(id) ON DELETE CASCADE,
+  related_person_id uuid NOT NULL REFERENCES public.clients(id) ON DELETE CASCADE,
+  relation_type text NOT NULL CHECK (relation_type IN ('father', 'mother')),
+  created_at timestamptz NOT NULL DEFAULT now(),
+  CONSTRAINT blood_relationships_not_self CHECK (person_id <> related_person_id)
+);
+
+CREATE TABLE IF NOT EXISTS public.spouse_relationships (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  male_id uuid NOT NULL REFERENCES public.clients(id) ON DELETE CASCADE,
+  female_id uuid NOT NULL REFERENCES public.clients(id) ON DELETE CASCADE,
+  relation_type text NOT NULL CHECK (relation_type IN ('spouse', 'cohabiting')),
+  start_date date,
+  end_date date,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  CONSTRAINT spouse_relationships_not_self CHECK (male_id <> female_id)
+);
+
+CREATE TABLE IF NOT EXISTS public.visits (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  client_id uuid NOT NULL REFERENCES public.clients(id) ON DELETE CASCADE,
+  visit_date timestamptz NOT NULL DEFAULT now(),
+  content text NOT NULL,
+  notes text,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS public.visit_gifts (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  visit_id uuid NOT NULL REFERENCES public.visits(id) ON DELETE CASCADE,
+  gift_name text NOT NULL,
+  quantity integer NOT NULL CHECK (quantity > 0),
+  price numeric(12, 2),
+  delivery_type text NOT NULL CHECK (delivery_type IN ('in_person', 'mailed')),
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+
+-- ===== Indexes =====
+CREATE INDEX IF NOT EXISTS idx_clients_user_id ON public.clients(user_id);
+CREATE INDEX IF NOT EXISTS idx_clients_birth_date ON public.clients(birth_date);
+CREATE INDEX IF NOT EXISTS idx_blood_relationships_person_id ON public.blood_relationships(person_id);
+CREATE INDEX IF NOT EXISTS idx_blood_relationships_related_person_id ON public.blood_relationships(related_person_id);
+CREATE INDEX IF NOT EXISTS idx_spouse_relationships_male_id ON public.spouse_relationships(male_id);
+CREATE INDEX IF NOT EXISTS idx_spouse_relationships_female_id ON public.spouse_relationships(female_id);
+CREATE INDEX IF NOT EXISTS idx_visits_client_id ON public.visits(client_id);
+CREATE INDEX IF NOT EXISTS idx_visits_visit_date ON public.visits(visit_date DESC);
+CREATE INDEX IF NOT EXISTS idx_visit_gifts_visit_id ON public.visit_gifts(visit_id);
+
+-- ===== updated_at trigger for clients =====
+CREATE OR REPLACE FUNCTION public.set_updated_at()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  NEW.updated_at = now();
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS trg_clients_set_updated_at ON public.clients;
+CREATE TRIGGER trg_clients_set_updated_at
+BEFORE UPDATE ON public.clients
+FOR EACH ROW
+EXECUTE FUNCTION public.set_updated_at();
+
+-- ===== RLS =====
 ALTER TABLE IF EXISTS public.clients ENABLE ROW LEVEL SECURITY;
 ALTER TABLE IF EXISTS public.blood_relationships ENABLE ROW LEVEL SECURITY;
 ALTER TABLE IF EXISTS public.spouse_relationships ENABLE ROW LEVEL SECURITY;
@@ -117,6 +210,7 @@ WITH CHECK (
   )
 );
 
+-- ===== Birthday reminder function =====
 DROP FUNCTION IF EXISTS public.get_upcoming_birthdays(uuid, integer);
 CREATE OR REPLACE FUNCTION public.get_upcoming_birthdays(
   p_user_id uuid,
@@ -172,3 +266,5 @@ AS $$
 $$;
 
 GRANT EXECUTE ON FUNCTION public.get_upcoming_birthdays(uuid, integer) TO authenticated;
+
+COMMIT;

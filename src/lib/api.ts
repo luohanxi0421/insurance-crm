@@ -7,6 +7,51 @@ export async function signUp(email: string, password: string) {
   return { data, error };
 }
 
+export async function sendRegisterEmailCode(email: string) {
+  const { data, error } = await supabase.auth.signInWithOtp({
+    email,
+    options: {
+      shouldCreateUser: true,
+    },
+  });
+  return { data, error };
+}
+
+export async function verifyRegisterEmailCode(
+  email: string,
+  code: string,
+  password: string
+) {
+  // Prefer email OTP verification first.
+  const { data, error } = await supabase.auth.verifyOtp({
+    email,
+    token: code,
+    type: 'email',
+  });
+  let verifiedData = data;
+  let verifyError = error;
+
+  // Some Supabase projects may issue signup-type tokens for new users.
+  if (verifyError) {
+    const retry = await supabase.auth.verifyOtp({
+      email,
+      token: code,
+      type: 'signup',
+    });
+    verifiedData = retry.data;
+    verifyError = retry.error;
+  }
+  if (verifyError) return { data: verifiedData, error: verifyError };
+
+  // After OTP verification, set account password so the user can sign in with email+password.
+  const { data: updatedUser, error: updateError } = await supabase.auth.updateUser({
+    password,
+  });
+  if (updateError) return { data: updatedUser, error: updateError };
+
+  return { data: verifiedData, error: null };
+}
+
 export async function signIn(email: string, password: string) {
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
   return { data, error };
@@ -20,6 +65,15 @@ export async function signOut() {
 export async function getCurrentUser() {
   const { data: { user } } = await supabase.auth.getUser();
   return user;
+}
+
+async function requireCurrentUserId(): Promise<string> {
+  const { data, error } = await supabase.auth.getUser();
+  if (error) throw error;
+  if (!data.user) {
+    throw new Error('登录状态已失效，请重新登录。');
+  }
+  return data.user.id;
 }
 
 // Clients
@@ -54,10 +108,13 @@ export async function fetchClientById(id: string): Promise<Client> {
   return data;
 }
 
-export async function createClient(client: Omit<Client, 'id' | 'created_at' | 'updated_at'>): Promise<Client> {
+export async function createClient(
+  client: Omit<Client, 'id' | 'user_id' | 'created_at' | 'updated_at'>
+): Promise<Client> {
+  const userId = await requireCurrentUserId();
   const { data, error } = await supabase
     .from('clients')
-    .insert(client)
+    .insert({ ...client, user_id: userId })
     .select()
     .single();
   if (error) throw error;

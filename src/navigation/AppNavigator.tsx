@@ -41,52 +41,52 @@ export default function AppNavigator() {
               name="ClientList"
               component={ClientListScreen}
               options={({ navigation }) => ({
-                title: 'Clients',
+                title: '客户列表',
                 headerRight: () => null,
               })}
             />
             <Stack.Screen
               name="BirthdayList"
               component={BirthdayScreen}
-              options={{ title: 'Birthday Reminders' }}
+              options={{ title: '生日提醒' }}
             />
             <Stack.Screen
               name="ClientDetail"
               component={ClientDetailScreen}
-              options={{ title: 'Client Detail' }}
+              options={{ title: '客户详情' }}
             />
             <Stack.Screen
               name="ClientForm"
               component={ClientFormScreen}
               options={({ route }) => ({
-                title: route.params?.clientId ? 'Edit Client' : 'New Client',
+                title: route.params?.clientId ? '编辑客户' : '新增客户',
               })}
             />
             <Stack.Screen
               name="VisitList"
               component={VisitListScreen}
-              options={{ title: 'Visit Records' }}
+              options={{ title: '拜访记录' }}
             />
             <Stack.Screen
               name="VisitForm"
               component={VisitFormScreen}
-              options={{ title: 'New Visit' }}
+              options={{ title: '新增拜访' }}
             />
             <Stack.Screen
               name="BloodRelationForm"
               component={BloodRelationFormScreen}
-              options={{ title: 'Add Blood Relation' }}
+              options={{ title: '添加血缘关系' }}
             />
             <Stack.Screen
               name="SpouseRelationForm"
               component={SpouseRelationFormScreen}
-              options={{ title: 'Add Partner Relation' }}
+              options={{ title: '添加伴侣关系' }}
             />
           </>
         ) : (
           <>
-            <Stack.Screen name="Login" component={LoginScreen} options={{ title: 'Login' }} />
-            <Stack.Screen name="Register" component={RegisterScreen} options={{ title: 'Register' }} />
+            <Stack.Screen name="Login" component={LoginScreen} options={{ title: '登录' }} />
+            <Stack.Screen name="Register" component={RegisterScreen} options={{ title: '注册' }} />
           </>
         )}
       </Stack.Navigator>

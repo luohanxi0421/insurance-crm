@@ -52,7 +52,7 @@ export default function ClientDetailScreen({ route, navigation }: Props) {
       setBloodRelations(blood);
       setSpouseRelations(spouse);
     } catch {
-      Alert.alert('Error', 'Failed to load details.');
+      Alert.alert('错误', '加载详情失败。');
     } finally {
       setLoading(false);
     }
@@ -65,10 +65,10 @@ export default function ClientDetailScreen({ route, navigation }: Props) {
   }, [navigation, loadData]);
 
   const handleDeleteBlood = (id: string, name: string) => {
-    Alert.alert('Delete relation', `Delete blood relation with ${name}?`, [
-      { text: 'Cancel', style: 'cancel' },
+    Alert.alert('删除关系', `确认删除与 ${name} 的血缘关系吗？`, [
+      { text: '取消', style: 'cancel' },
       {
-        text: 'Delete',
+        text: '删除',
         style: 'destructive',
         onPress: async () => {
           await deleteBloodRelationship(id);
@@ -79,10 +79,10 @@ export default function ClientDetailScreen({ route, navigation }: Props) {
   };
 
   const handleDeleteSpouse = (id: string, name: string) => {
-    Alert.alert('Delete relation', `Delete partner relation with ${name}?`, [
-      { text: 'Cancel', style: 'cancel' },
+    Alert.alert('删除关系', `确认删除与 ${name} 的伴侣关系吗？`, [
+      { text: '取消', style: 'cancel' },
       {
-        text: 'Delete',
+        text: '删除',
         style: 'destructive',
         onPress: async () => {
           await deleteSpouseRelationship(id);
@@ -95,7 +95,7 @@ export default function ClientDetailScreen({ route, navigation }: Props) {
   if (loading) {
     return (
       <View style={styles.center}>
-        <Text>Loading...</Text>
+        <Text>加载中...</Text>
       </View>
     );
   }
@@ -105,12 +105,12 @@ export default function ClientDetailScreen({ route, navigation }: Props) {
   }
 
   const bloodLabel = (type: string) => {
-    const map: Record<string, string> = { father: 'Father', mother: 'Mother' };
+    const map: Record<string, string> = { father: '父亲', mother: '母亲' };
     return map[type] || type;
   };
 
   const partnerLabel = (type: string) => {
-    const map: Record<string, string> = { spouse: 'Spouse', cohabiting: 'Cohabiting' };
+    const map: Record<string, string> = { spouse: '配偶', cohabiting: '同居' };
     return map[type] || type;
   };
 
@@ -119,70 +119,63 @@ export default function ClientDetailScreen({ route, navigation }: Props) {
 
   const renderPartner = (r: SpouseRelationship) => {
     const partnerName = r.male_id === clientId ? r.female_name : r.male_name;
-    const dateText = r.start_date
-      ? `${r.start_date} ~ ${r.end_date || 'present'}`
-      : 'date unknown';
+    const dateText = r.start_date ? `${r.start_date} ~ ${r.end_date || '至今'}` : '日期未知';
 
     return (
       <View key={r.id} style={styles.relationItem}>
         <View>
-          <Text style={styles.relationName}>{partnerName || 'Unknown'}</Text>
+          <Text style={styles.relationName}>{partnerName || '未知'}</Text>
           <Text style={styles.relationType}>{`${partnerLabel(r.relation_type)} | ${dateText}`}</Text>
         </View>
-        <TouchableOpacity onPress={() => handleDeleteSpouse(r.id, partnerName || 'Unknown')}>
-          <Text style={styles.deleteText}>Delete</Text>
+        <TouchableOpacity onPress={() => handleDeleteSpouse(r.id, partnerName || '未知')}>
+          <Text style={styles.deleteText}>删除</Text>
         </TouchableOpacity>
       </View>
     );
   };
 
   const birthdayValue =
-    client.birthday_type === 'solar'
-      ? client.birth_date || '-'
-      : `Lunar ${client.lunar_birthday_month || '?'}-${client.lunar_birthday_day || '?'}` +
-        (client.lunar_is_leap_month
-          ? ` (Leap #${client.lunar_leap_month_order || '?'})`
-          : '');
+    (client.birth_date || '-') + `（${client.birthday_type === 'solar' ? '公历' : '农历'}）`;
 
   return (
     <ScrollView style={styles.container}>
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Basic Info</Text>
+          <Text style={styles.sectionTitle}>基础信息</Text>
           <TouchableOpacity onPress={() => navigation.navigate('ClientForm', { clientId })}>
-            <Text style={styles.linkText}>Edit</Text>
+            <Text style={styles.linkText}>编辑</Text>
           </TouchableOpacity>
         </View>
 
-        <InfoRow label="Name" value={client.name} />
+        <InfoRow label="姓名" value={client.name} />
         <InfoRow
-          label="Gender"
-          value={client.gender === 'male' ? 'Male' : client.gender === 'female' ? 'Female' : '-'}
+          label="性别"
+          value={client.gender === 'male' ? '男' : client.gender === 'female' ? '女' : '-'}
         />
-        <InfoRow label="Phone" value={client.phone || '-'} />
-        <InfoRow label="Birthday" value={birthdayValue} />
-        {client.notes ? <InfoRow label="Notes" value={client.notes} /> : null}
+        <InfoRow label="手机号" value={client.phone || '-'} />
+        <InfoRow label="生日" value={birthdayValue} />
+        {client.notes ? <InfoRow label="备注" value={client.notes} /> : null}
       </View>
 
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Blood Relations</Text>
+          <Text style={styles.sectionTitle}>血缘关系</Text>
           <TouchableOpacity onPress={() => navigation.navigate('BloodRelationForm', { clientId })}>
-            <Text style={styles.linkText}>Add</Text>
+            <Text style={styles.linkText}>添加</Text>
           </TouchableOpacity>
         </View>
 
         {bloodRelations.length === 0 ? (
-          <Text style={styles.emptyText}>No blood relations.</Text>
+          <Text style={styles.emptyText}>暂无血缘关系。</Text>
         ) : (
           bloodRelations.map((r) => (
             <View key={r.id} style={styles.relationItem}>
               <View>
-                <Text style={styles.relationName}>{r.related_name || 'Unknown'}</Text>
+                <Text style={styles.relationName}>{r.related_name || '未知'}</Text>
                 <Text style={styles.relationType}>{bloodLabel(r.relation_type)}</Text>
               </View>
-              <TouchableOpacity onPress={() => handleDeleteBlood(r.id, r.related_name || 'Unknown')}>
-                <Text style={styles.deleteText}>Delete</Text>
+              <TouchableOpacity onPress={() => handleDeleteBlood(r.id, r.related_name || '未知')}>
+                <Text style={styles.deleteText}>删除</Text>
               </TouchableOpacity>
             </View>
           ))
@@ -191,22 +184,22 @@ export default function ClientDetailScreen({ route, navigation }: Props) {
 
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Partner Relations</Text>
+          <Text style={styles.sectionTitle}>伴侣关系</Text>
           <TouchableOpacity onPress={() => navigation.navigate('SpouseRelationForm', { clientId })}>
-            <Text style={styles.linkText}>Add</Text>
+            <Text style={styles.linkText}>添加</Text>
           </TouchableOpacity>
         </View>
 
-        <Text style={styles.groupTitle}>Current</Text>
+        <Text style={styles.groupTitle}>当前关系</Text>
         {currentPartnerRelations.length === 0 ? (
-          <Text style={styles.emptyText}>No active relation.</Text>
+          <Text style={styles.emptyText}>暂无有效关系。</Text>
         ) : (
           currentPartnerRelations.map(renderPartner)
         )}
 
-        <Text style={styles.groupTitle}>History</Text>
+        <Text style={styles.groupTitle}>历史关系</Text>
         {historyPartnerRelations.length === 0 ? (
-          <Text style={styles.emptyText}>No historical relation.</Text>
+          <Text style={styles.emptyText}>暂无历史关系。</Text>
         ) : (
           historyPartnerRelations.map(renderPartner)
         )}
@@ -217,14 +210,14 @@ export default function ClientDetailScreen({ route, navigation }: Props) {
           style={styles.primaryButton}
           onPress={() => navigation.navigate('VisitList', { clientId })}
         >
-          <Text style={styles.primaryButtonText}>View Visits</Text>
+          <Text style={styles.primaryButtonText}>查看拜访</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
           style={styles.secondaryButton}
           onPress={() => navigation.navigate('VisitForm', { clientId })}
         >
-          <Text style={styles.secondaryButtonText}>Add Visit</Text>
+          <Text style={styles.secondaryButtonText}>新增拜访</Text>
         </TouchableOpacity>
       </View>
     </ScrollView>

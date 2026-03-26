@@ -30,7 +30,7 @@ export default function VisitListScreen({ route, navigation }: Props) {
       );
       setVisits(withGifts);
     } catch {
-      Alert.alert('Error', 'Failed to load visit records.');
+      Alert.alert('错误', '加载拜访记录失败。');
     } finally {
       setLoading(false);
     }
@@ -43,10 +43,10 @@ export default function VisitListScreen({ route, navigation }: Props) {
   }, [navigation, loadVisits]);
 
   const handleDelete = (id: string) => {
-    Alert.alert('Delete visit', 'Delete this visit record?', [
-      { text: 'Cancel', style: 'cancel' },
+    Alert.alert('删除拜访', '确认删除这条拜访记录吗？', [
+      { text: '取消', style: 'cancel' },
       {
-        text: 'Delete',
+        text: '删除',
         style: 'destructive',
         onPress: async () => {
           await deleteVisit(id);
@@ -64,13 +64,13 @@ export default function VisitListScreen({ route, navigation }: Props) {
         <Text style={styles.content} numberOfLines={4}>
           {item.content}
         </Text>
-        {item.notes ? <Text style={styles.notes}>Notes: {item.notes}</Text> : null}
+        {item.notes ? <Text style={styles.notes}>备注：{item.notes}</Text> : null}
         {item.gifts && item.gifts.length > 0 ? (
           <View style={styles.giftsWrap}>
             {item.gifts.map((g) => (
               <Text key={g.id} style={styles.giftText}>
                 {g.gift_name} x{g.quantity}
-                {g.delivery_type === 'mailed' ? ' (mailed)' : ''}
+                {g.delivery_type === 'mailed' ? '（邮寄）' : ''}
               </Text>
             ))}
           </View>
@@ -83,11 +83,11 @@ export default function VisitListScreen({ route, navigation }: Props) {
     <View style={styles.container}>
       {loading ? (
         <View style={styles.center}>
-          <Text>Loading...</Text>
+          <Text>加载中...</Text>
         </View>
       ) : visits.length === 0 ? (
         <View style={styles.center}>
-          <Text style={styles.emptyText}>No visit records yet.</Text>
+          <Text style={styles.emptyText}>暂无拜访记录。</Text>
         </View>
       ) : (
         <FlatList

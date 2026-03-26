@@ -32,7 +32,7 @@ export default function BirthdayScreen({ navigation }: any) {
       const ordered = [...data].sort((a, b) => a.days_until - b.days_until);
       setReminders(ordered);
     } catch {
-      Alert.alert('Error', 'Failed to load birthday reminders.');
+      Alert.alert('错误', '加载生日提醒失败。');
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -53,12 +53,12 @@ export default function BirthdayScreen({ navigation }: any) {
         <Text style={styles.name}>{item.name}</Text>
         <View style={[styles.badge, item.days_until === 0 && styles.badgeToday]}>
           <Text style={styles.badgeText}>
-            {item.days_until === 0 ? 'Today' : `${item.days_until} day(s)`}
+            {item.days_until === 0 ? '今天' : `${item.days_until} 天后`}
           </Text>
         </View>
       </View>
       <Text style={styles.dateText}>
-        Birthday: {item.birth_date} ({item.birthday_type})
+        生日：{item.birth_date}（{item.birthday_type === 'solar' ? '公历' : '农历'}）
       </Text>
     </TouchableOpacity>
   );
@@ -67,11 +67,11 @@ export default function BirthdayScreen({ navigation }: any) {
     <View style={styles.container}>
       {loading ? (
         <View style={styles.center}>
-          <Text>Loading...</Text>
+          <Text>加载中...</Text>
         </View>
       ) : reminders.length === 0 ? (
         <View style={styles.center}>
-          <Text style={styles.emptyText}>No birthdays in the next 7 days.</Text>
+          <Text style={styles.emptyText}>未来 7 天暂无生日提醒。</Text>
         </View>
       ) : (
         <FlatList

@@ -57,12 +57,12 @@ export default function VisitFormScreen({ route, navigation }: Props) {
 
   const handleSave = async () => {
     if (!content.trim()) {
-      Alert.alert('Validation', 'Visit content is required.');
+      Alert.alert('校验失败', '拜访内容不能为空。');
       return;
     }
 
     if (visitDate && !validDate(visitDate)) {
-      Alert.alert('Validation', 'Visit date must be YYYY-MM-DD.');
+      Alert.alert('校验失败', '拜访日期格式必须为 YYYY-MM-DD。');
       return;
     }
 
@@ -96,7 +96,7 @@ export default function VisitFormScreen({ route, navigation }: Props) {
 
       navigation.goBack();
     } catch (err: any) {
-      Alert.alert('Save failed', err?.message || 'Unknown error');
+      Alert.alert('保存失败', err?.message || '未知错误');
     } finally {
       setSaving(false);
     }
@@ -104,7 +104,7 @@ export default function VisitFormScreen({ route, navigation }: Props) {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Text style={styles.label}>Visit Date</Text>
+      <Text style={styles.label}>拜访日期</Text>
       <TextInput
         style={styles.input}
         value={visitDate}
@@ -112,41 +112,41 @@ export default function VisitFormScreen({ route, navigation }: Props) {
         placeholder="YYYY-MM-DD"
       />
 
-      <Text style={styles.label}>Visit Content *</Text>
+      <Text style={styles.label}>拜访内容 *</Text>
       <TextInput
         style={[styles.input, styles.textArea]}
         value={content}
         onChangeText={setContent}
-        placeholder="Conversation notes"
+        placeholder="请输入沟通内容"
         multiline
         numberOfLines={8}
       />
 
-      <Text style={styles.label}>Notes</Text>
+      <Text style={styles.label}>备注</Text>
       <TextInput
         style={[styles.input, styles.textArea]}
         value={notes}
         onChangeText={setNotes}
-        placeholder="Additional notes"
+        placeholder="请输入补充备注"
         multiline
         numberOfLines={3}
       />
 
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Gift Records</Text>
+          <Text style={styles.sectionTitle}>礼品记录</Text>
           <TouchableOpacity onPress={addGiftRow}>
-            <Text style={styles.linkText}>+ Add Gift</Text>
+            <Text style={styles.linkText}>+ 添加礼品</Text>
           </TouchableOpacity>
         </View>
 
         {gifts.map((gift, index) => (
           <View key={index} style={styles.giftCard}>
             <View style={styles.giftCardHeader}>
-              <Text style={styles.giftCardTitle}>Gift {index + 1}</Text>
+              <Text style={styles.giftCardTitle}>礼品 {index + 1}</Text>
               {gifts.length > 1 ? (
                 <TouchableOpacity onPress={() => removeGiftRow(index)}>
-                  <Text style={styles.deleteText}>Delete</Text>
+                  <Text style={styles.deleteText}>删除</Text>
                 </TouchableOpacity>
               ) : null}
             </View>
@@ -155,7 +155,7 @@ export default function VisitFormScreen({ route, navigation }: Props) {
               style={styles.input}
               value={gift.gift_name}
               onChangeText={(value) => updateGift(index, 'gift_name', value)}
-              placeholder="Gift name"
+              placeholder="礼品名称"
             />
 
             <View style={styles.row}>
@@ -164,7 +164,7 @@ export default function VisitFormScreen({ route, navigation }: Props) {
                   style={styles.input}
                   value={gift.quantity}
                   onChangeText={(value) => updateGift(index, 'quantity', value)}
-                  placeholder="Quantity"
+                  placeholder="数量"
                   keyboardType="number-pad"
                 />
               </View>
@@ -173,7 +173,7 @@ export default function VisitFormScreen({ route, navigation }: Props) {
                   style={styles.input}
                   value={gift.price}
                   onChangeText={(value) => updateGift(index, 'price', value)}
-                  placeholder="Price (optional)"
+                  placeholder="价格（选填）"
                   keyboardType="decimal-pad"
                 />
               </View>
@@ -193,7 +193,7 @@ export default function VisitFormScreen({ route, navigation }: Props) {
                     gift.delivery_type === 'in_person' && styles.choiceTextActive,
                   ]}
                 >
-                  In Person
+                  当面赠送
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
@@ -209,7 +209,7 @@ export default function VisitFormScreen({ route, navigation }: Props) {
                     gift.delivery_type === 'mailed' && styles.choiceTextActive,
                   ]}
                 >
-                  Mailed
+                  邮寄
                 </Text>
               </TouchableOpacity>
             </View>
@@ -218,7 +218,7 @@ export default function VisitFormScreen({ route, navigation }: Props) {
       </View>
 
       <TouchableOpacity style={[styles.saveButton, saving && styles.saveButtonDisabled]} onPress={handleSave}>
-        <Text style={styles.saveButtonText}>{saving ? 'Saving...' : 'Save Visit'}</Text>
+        <Text style={styles.saveButtonText}>{saving ? '保存中...' : '保存拜访'}</Text>
       </TouchableOpacity>
     </ScrollView>
   );

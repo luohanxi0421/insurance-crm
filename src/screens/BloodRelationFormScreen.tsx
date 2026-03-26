@@ -37,13 +37,13 @@ export default function BloodRelationFormScreen({ route, navigation }: Props) {
       const data = await fetchClients(user.id);
       setClients(data.filter((c) => c.id !== clientId));
     } catch {
-      Alert.alert('Error', 'Failed to load candidate clients.');
+      Alert.alert('错误', '加载候选客户失败。');
     }
   };
 
   const save = async () => {
     if (!selectedId) {
-      Alert.alert('Validation', 'Please select one related person.');
+      Alert.alert('校验失败', '请选择一个关联人。');
       return;
     }
 
@@ -52,7 +52,7 @@ export default function BloodRelationFormScreen({ route, navigation }: Props) {
       await addBloodRelationship(clientId, selectedId, relationType);
       navigation.goBack();
     } catch (err: any) {
-      Alert.alert('Save failed', err?.message || 'Unknown error');
+      Alert.alert('保存失败', err?.message || '未知错误');
     } finally {
       setSaving(false);
     }
@@ -60,14 +60,14 @@ export default function BloodRelationFormScreen({ route, navigation }: Props) {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Relation Type</Text>
+      <Text style={styles.title}>关系类型</Text>
       <View style={styles.row}>
         <TouchableOpacity
           style={[styles.choiceButton, relationType === 'father' && styles.choiceButtonActive]}
           onPress={() => setRelationType('father')}
         >
           <Text style={[styles.choiceText, relationType === 'father' && styles.choiceTextActive]}>
-            Father
+            父亲
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
@@ -75,12 +75,12 @@ export default function BloodRelationFormScreen({ route, navigation }: Props) {
           onPress={() => setRelationType('mother')}
         >
           <Text style={[styles.choiceText, relationType === 'mother' && styles.choiceTextActive]}>
-            Mother
+            母亲
           </Text>
         </TouchableOpacity>
       </View>
 
-      <Text style={styles.title}>Select Related Person</Text>
+      <Text style={styles.title}>选择关联人</Text>
       <FlatList
         data={clients}
         keyExtractor={(item) => item.id}
@@ -97,7 +97,7 @@ export default function BloodRelationFormScreen({ route, navigation }: Props) {
       />
 
       <TouchableOpacity style={[styles.saveButton, saving && styles.saveButtonDisabled]} onPress={save}>
-        <Text style={styles.saveButtonText}>{saving ? 'Saving...' : 'Save Relation'}</Text>
+        <Text style={styles.saveButtonText}>{saving ? '保存中...' : '保存关系'}</Text>
       </TouchableOpacity>
     </View>
   );

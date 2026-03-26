@@ -5,10 +5,6 @@ export interface Client {
   gender: 'male' | 'female' | null;
   phone: string | null;
   birth_date: string | null;
-  lunar_birthday_month: number | null;
-  lunar_birthday_day: number | null;
-  lunar_is_leap_month: boolean | null;
-  lunar_leap_month_order: number | null;
   birthday_type: 'solar' | 'lunar';
   notes: string | null;
   created_at: string;
