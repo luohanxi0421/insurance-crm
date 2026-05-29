@@ -1,0 +1,49 @@
+0 verbose cli D:\Program Files\nodejs\node.exe C:\Users\Administrator\AppData\Roaming\npm\node_modules\npm\bin\npm-cli.js
+1 info using npm@9.1.1
+2 info using node@v22.15.0
+3 timing npm:load:whichnode Completed in 0ms
+4 timing config:load:defaults Completed in 3ms
+5 timing config:load:file:C:\Users\Administrator\AppData\Roaming\npm\node_modules\npm\npmrc Completed in 4ms
+6 timing config:load:builtin Completed in 4ms
+7 timing config:load:cli Completed in 3ms
+8 timing config:load:env Completed in 2ms
+9 timing config:load:file:E:\opensource\insurance-crm\.npmrc Completed in 1ms
+10 timing config:load:project Completed in 7ms
+11 timing config:load:file:C:\Users\Administrator\.npmrc Completed in 0ms
+12 timing config:load:user Completed in 0ms
+13 timing config:load:file:C:\Users\Administrator\AppData\Roaming\npm\etc\npmrc Completed in 0ms
+14 timing config:load:global Completed in 1ms
+15 timing config:load:setEnvs Completed in 2ms
+16 timing config:load Completed in 22ms
+17 timing npm:load:configload Completed in 23ms
+18 timing npm:load:mkdirpcache Completed in 1ms
+19 timing npm:load:mkdirplogs Completed in 0ms
+20 verbose title npm explain expo-cli
+21 verbose argv "explain" "expo-cli" "--json"
+22 timing npm:load:setTitle Completed in 2ms
+23 timing config:load:flatten Completed in 4ms
+24 timing npm:load:display Completed in 5ms
+25 verbose logfile logs-max:10 dir:E:\opensource\insurance-crm\.npm-cache\_logs\2026-05-14T15_13_49_125Z-
+26 verbose logfile E:\opensource\insurance-crm\.npm-cache\_logs\2026-05-14T15_13_49_125Z-debug-0.log
+27 timing npm:load:logFile Completed in 8ms
+28 timing npm:load:timers Completed in 0ms
+29 timing npm:load:configScope Completed in 0ms
+30 timing npm:load Completed in 40ms
+31 silly logfile done cleaning log files
+32 timing config:load:flatten Completed in 2ms
+33 timing arborist:ctor Completed in 3ms
+34 timing arborist:ctor Completed in 0ms
+35 timing command:explain Completed in 1630ms
+36 verbose stack Error: No dependencies found matching expo-cli
+36 verbose stack     at Explain.exec (C:\Users\Administrator\AppData\Roaming\npm\node_modules\npm\lib\commands\explain.js:57:13)
+36 verbose stack     at async module.exports (C:\Users\Administrator\AppData\Roaming\npm\node_modules\npm\lib\cli.js:133:5)
+37 verbose cwd E:\opensource\insurance-crm
+38 verbose Windows_NT 10.0.19045
+39 verbose node v22.15.0
+40 verbose npm  v9.1.1
+41 error No dependencies found matching expo-cli
+42 verbose exit 1
+43 timing npm Completed in 1723ms
+44 verbose code 1
+45 error A complete log of this run can be found in:
+45 error     E:\opensource\insurance-crm\.npm-cache\_logs\2026-05-14T15_13_49_125Z-debug-0.log

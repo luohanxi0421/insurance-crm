@@ -1,0 +1,37 @@
+{
+  "expo": {
+    "name": "insurance-crm",
+    "slug": "insurance-crm",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "package": "com.luohanxi.insurancecrm",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundColor": "#E6F4FE"
+      }
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "@sentry/react-native/expo"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "3c4e3434-99cf-49f3-b81e-fc9a79124123"
+      }
+    },
+    "owner": "way311"
+  }
+}

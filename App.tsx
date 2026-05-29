@@ -1,10 +1,18 @@
-﻿import React, { useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { View, ActivityIndicator, StyleSheet } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import * as Sentry from '@sentry/react-native';
 import { useAuth } from './src/store/authStore';
 import AppNavigator from './src/navigation/AppNavigator';
 
-export default function App() {
+const sentryDsn = process.env.EXPO_PUBLIC_SENTRY_DSN;
+
+Sentry.init({
+  dsn: sentryDsn,
+  enabled: !__DEV__ && Boolean(sentryDsn),
+});
+
+function App() {
   const { loading, initialize } = useAuth();
 
   useEffect(() => {
@@ -35,3 +43,5 @@ const styles = StyleSheet.create({
     backgroundColor: '#f5f5f5',
   },
 });
+
+export default Sentry.wrap(App);
