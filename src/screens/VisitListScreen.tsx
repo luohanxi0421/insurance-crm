@@ -60,7 +60,14 @@ export default function VisitListScreen({ route, navigation }: Props) {
     const date = new Date(item.visit_date).toLocaleDateString();
     return (
       <TouchableOpacity style={styles.card} onLongPress={() => handleDelete(item.id)}>
-        <Text style={styles.date}>{date}</Text>
+        <View style={styles.cardHeader}>
+          <Text style={styles.date}>{date}</Text>
+          <TouchableOpacity
+            onPress={() => navigation.navigate('VisitForm', { clientId, visitId: item.id })}
+          >
+            <Text style={styles.editText}>编辑</Text>
+          </TouchableOpacity>
+        </View>
         <Text style={styles.content} numberOfLines={4}>
           {item.content}
         </Text>
@@ -122,6 +129,13 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   date: { fontSize: 13, color: '#007AFF', fontWeight: '500', marginBottom: 6 },
+  cardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  editText: { color: '#007AFF', fontSize: 14, fontWeight: '600' },
   content: { fontSize: 14, color: '#333', lineHeight: 20 },
   notes: { fontSize: 13, color: '#888', marginTop: 6 },
   giftsWrap: {

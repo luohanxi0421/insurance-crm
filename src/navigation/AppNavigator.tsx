@@ -22,7 +22,7 @@ export type RootStackParamList = {
   ClientDetail: { clientId: string };
   ClientForm: { clientId?: string } | undefined;
   VisitList: { clientId: string };
-  VisitForm: { clientId: string };
+  VisitForm: { clientId: string; visitId?: string };
   BloodRelationForm: { clientId: string };
   SpouseRelationForm: { clientId: string };
 };
@@ -70,7 +70,9 @@ export default function AppNavigator() {
             <Stack.Screen
               name="VisitForm"
               component={VisitFormScreen}
-              options={{ title: '新增拜访' }}
+              options={({ route }) => ({
+                title: route.params?.visitId ? '编辑拜访' : '新增拜访',
+              })}
             />
             <Stack.Screen
               name="BloodRelationForm"

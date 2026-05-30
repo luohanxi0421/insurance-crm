@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const rawSupabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL || '';
 const rawSupabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || '';
@@ -31,7 +32,15 @@ const fallbackAnonKey = 'missing-anon-key';
 
 export const supabase = createClient(
   isSupabaseConfigured ? supabaseUrl : fallbackUrl,
-  isSupabaseConfigured ? supabaseAnonKey : fallbackAnonKey
+  isSupabaseConfigured ? supabaseAnonKey : fallbackAnonKey,
+  {
+    auth: {
+      storage: AsyncStorage,
+      autoRefreshToken: true,
+      persistSession: true,
+      detectSessionInUrl: false,
+    },
+  }
 );
 
 export { isSupabaseConfigured };

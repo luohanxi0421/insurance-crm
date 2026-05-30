@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+﻿import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { RouteProp } from '@react-navigation/native';
 import { RootStackParamList } from '../navigation/AppNavigator';
-import { createVisit, addVisitGift } from '../lib/api';
+import { createVisit, updateVisit, fetchVisitById, addVisitGift, deleteVisitGift, fetchVisitGifts } from '../lib/api';
 
 type Props = { route: RouteProp<RootStackParamList, 'VisitForm'>; navigation: any };
 
@@ -22,7 +22,8 @@ interface GiftInput {
 }
 
 export default function VisitFormScreen({ route, navigation }: Props) {
-  const { clientId } = route.params;
+  const { clientId, visitId } = route.params;
+  const isEdit = Boolean(visitId);
   const [visitDate, setVisitDate] = useState(new Date().toISOString().split('T')[0]);
   const [content, setContent] = useState('');
   const [notes, setNotes] = useState('');
@@ -30,6 +31,39 @@ export default function VisitFormScreen({ route, navigation }: Props) {
     { gift_name: '', quantity: '1', price: '', delivery_type: 'in_person' },
   ]);
   const [saving, setSaving] = useState(false);
+  const [loadingData, setLoadingData] = useState(false);
+
+  useEffect(() => {
+    if (isEdit && visitId) {
+      loadVisit(visitId);
+    }
+  }, [isEdit, visitId]);
+
+  const loadVisit = async (id: string) => {
+    setLoadingData(true);
+    try {
+      const visit = await fetchVisitById(id);
+      setVisitDate(visit.visit_date ? visit.visit_date.split('T')[0] : '');
+      setContent(visit.content || '');
+      setNotes(visit.notes || '');
+
+      const existingGifts = await fetchVisitGifts(id);
+      if (existingGifts.length > 0) {
+        setGifts(
+          existingGifts.map((g) => ({
+            gift_name: g.gift_name,
+            quantity: String(g.quantity),
+            price: g.price != null ? String(g.price) : '',
+            delivery_type: g.delivery_type,
+          }))
+        );
+      }
+    } catch {
+      Alert.alert('错误', '加载拜访记录失败。');
+    } finally {
+      setLoadingData(false);
+    }
+  };
 
   const updateGift = (index: number, field: keyof GiftInput, value: string) => {
     setGifts((prev) => {
@@ -68,14 +102,33 @@ export default function VisitFormScreen({ route, navigation }: Props) {
 
     setSaving(true);
     try {
-      const visit = await createVisit({
-        client_id: clientId,
-        visit_date: visitDate
-          ? new Date(`${visitDate}T00:00:00`).toISOString()
-          : new Date().toISOString(),
-        content: content.trim(),
-        notes: notes.trim() || null,
-      });
+      let visit;
+      if (isEdit && visitId) {
+        // Update existing visit fields.
+        visit = await updateVisit(visitId, {
+          visit_date: visitDate
+            ? new Date(`${visitDate}T00:00:00`).toISOString()
+            : new Date().toISOString(),
+          content: content.trim(),
+          notes: notes.trim() || null,
+        });
+
+        // Replace gifts: delete all existing, then re-add.
+        const oldGifts = await fetchVisitGifts(visitId);
+        for (const g of oldGifts) {
+          await deleteVisitGift(g.id);
+        }
+      } else {
+        // Create new visit.
+        visit = await createVisit({
+          client_id: clientId,
+          visit_date: visitDate
+            ? new Date(`${visitDate}T00:00:00`).toISOString()
+            : new Date().toISOString(),
+          content: content.trim(),
+          notes: notes.trim() || null,
+        });
+      }
 
       const validGifts = gifts.filter((g) => g.gift_name.trim());
 
@@ -101,6 +154,14 @@ export default function VisitFormScreen({ route, navigation }: Props) {
       setSaving(false);
     }
   };
+
+  if (loadingData) {
+    return (
+      <View style={styles.center}>
+        <Text>加载中...</Text>
+      </View>
+    );
+  }
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
@@ -218,7 +279,9 @@ export default function VisitFormScreen({ route, navigation }: Props) {
       </View>
 
       <TouchableOpacity style={[styles.saveButton, saving && styles.saveButtonDisabled]} onPress={handleSave}>
-        <Text style={styles.saveButtonText}>{saving ? '保存中...' : '保存拜访'}</Text>
+        <Text style={styles.saveButtonText}>
+          {saving ? '保存中...' : isEdit ? '保存修改' : '保存拜访'}
+        </Text>
       </TouchableOpacity>
     </ScrollView>
   );
@@ -226,6 +289,7 @@ export default function VisitFormScreen({ route, navigation }: Props) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f5f5f5' },
+  center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   content: { padding: 16, paddingBottom: 40 },
   label: { fontSize: 14, color: '#666', marginTop: 16, marginBottom: 6 },
   input: {

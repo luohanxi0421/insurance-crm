@@ -203,6 +203,16 @@ export async function deleteSpouseRelationship(id: string): Promise<void> {
 }
 
 // Visits
+export async function fetchVisitById(id: string): Promise<Visit> {
+  const { data, error } = await supabase
+    .from('visits')
+    .select('*')
+    .eq('id', id)
+    .single();
+  if (error) throw error;
+  return data;
+}
+
 export async function fetchVisits(clientId: string): Promise<Visit[]> {
   const { data, error } = await supabase
     .from('visits')

@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { User } from '@supabase/supabase-js';
-import { getCurrentUser } from '../lib/api';
+import { supabase } from '../lib/supabase';
 
 interface AuthStore {
   user: User | null;
@@ -16,7 +16,22 @@ export const useAuth = create<AuthStore>((set) => ({
   initialize: async () => {
     set({ loading: true });
     try {
-      const user = await getCurrentUser();
+      // First try restoring session from local storage (fast, no network).
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData.session) {
+        set({ user: null, loading: false });
+        return;
+      }
+
+      // Session exists locally – validate it with the server.
+      const { data: { user }, error } = await supabase.auth.getUser();
+      if (error || !user) {
+        // Session expired or invalid – clear local state.
+        await supabase.auth.signOut();
+        set({ user: null, loading: false });
+        return;
+      }
+
       set({ user, loading: false });
     } catch {
       set({ user: null, loading: false });
