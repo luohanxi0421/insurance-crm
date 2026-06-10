@@ -98,6 +98,28 @@ export async function searchClients(userId: string, query: string): Promise<Clie
   return data || [];
 }
 
+export async function findClientByName(userId: string, name: string): Promise<Client | null> {
+  const { data, error } = await supabase
+    .from('clients')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('name', name)
+    .maybeSingle();
+  if (error) throw error;
+  return data || null;
+}
+
+export async function findClientByPhone(userId: string, phone: string): Promise<Client | null> {
+  const { data, error } = await supabase
+    .from('clients')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('phone', phone)
+    .maybeSingle();
+  if (error) throw error;
+  return data || null;
+}
+
 export async function fetchClientById(id: string): Promise<Client> {
   const { data, error } = await supabase
     .from('clients')

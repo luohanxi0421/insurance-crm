@@ -73,6 +73,10 @@ export default function LoginScreen({ navigation }: any) {
           <Text style={styles.buttonText}>{loading ? '登录中...' : '登录'}</Text>
         </TouchableOpacity>
 
+        <TouchableOpacity onPress={() => navigation.navigate('ForgotPassword')}>
+          <Text style={styles.forgotText}>忘记密码？</Text>
+        </TouchableOpacity>
+
         <TouchableOpacity onPress={() => navigation.navigate('Register')}>
           <Text style={styles.linkText}>没有账号？去注册</Text>
         </TouchableOpacity>
@@ -105,4 +109,5 @@ const styles = StyleSheet.create({
   buttonDisabled: { opacity: 0.65 },
   buttonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
   linkText: { marginTop: 18, textAlign: 'center', color: '#007AFF', fontSize: 14 },
+  forgotText: { marginTop: 14, textAlign: 'center', color: '#007AFF', fontSize: 14 },
 });

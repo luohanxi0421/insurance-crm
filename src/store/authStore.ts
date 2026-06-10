@@ -5,14 +5,18 @@ import { supabase } from '../lib/supabase';
 interface AuthStore {
   user: User | null;
   loading: boolean;
+  isPasswordResetMode: boolean;
   initialize: () => Promise<void>;
   setUser: (user: User | null) => void;
   setLoading: (loading: boolean) => void;
+  setPasswordResetMode: (value: boolean) => void;
 }
 
 export const useAuth = create<AuthStore>((set) => ({
   user: null,
   loading: true,
+  isPasswordResetMode: false,
+  setPasswordResetMode: (value) => set({ isPasswordResetMode: value }),
   initialize: async () => {
     set({ loading: true });
     try {

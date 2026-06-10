@@ -7,10 +7,12 @@ import {
   StyleSheet,
   Alert,
   View,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { RouteProp } from '@react-navigation/native';
 import { RootStackParamList } from '../navigation/AppNavigator';
-import { createClient, updateClient, fetchClientById } from '../lib/api';
+import { createClient, updateClient, fetchClientById, findClientByName, findClientByPhone } from '../lib/api';
 import { useClientStore } from '../store/clientStore';
 import { useAuth } from '../store/authStore';
 
@@ -26,7 +28,7 @@ export default function ClientFormScreen({ route, navigation }: Props) {
   const { addClient, updateClient: updateInStore } = useClientStore();
 
   const [name, setName] = useState('');
-  const [gender, setGender] = useState<'male' | 'female' | ''>('');
+  const [gender, setGender] = useState<'male' | 'female' | ''>('male');
   const [phone, setPhone] = useState('');
   const [birthDate, setBirthDate] = useState('');
   const [birthdayType, setBirthdayType] = useState<'solar' | 'lunar'>('solar');
@@ -55,6 +57,18 @@ export default function ClientFormScreen({ route, navigation }: Props) {
 
   const validDate = (raw: string) => /^\d{4}-\d{2}-\d{2}$/.test(raw);
 
+  const formatBirthDate = (text: string) => {
+    // Strip non-digits, limit to 8 digits (YYYYMMDD)
+    const digits = text.replace(/\D/g, '').slice(0, 8);
+    // Auto-insert dashes: YYYY-MM-DD
+    let formatted = '';
+    for (let i = 0; i < digits.length; i++) {
+      if (i === 4 || i === 6) formatted += '-';
+      formatted += digits[i];
+    }
+    setBirthDate(formatted);
+  };
+
   const handleSave = async () => {
     if (!user) {
       return;
@@ -68,6 +82,44 @@ export default function ClientFormScreen({ route, navigation }: Props) {
     if (birthDate && !validDate(birthDate)) {
       Alert.alert('校验失败', '生日格式必须为 YYYY-MM-DD。');
       return;
+    }
+
+    // 新增客户时检查姓名是否已存在
+    if (!isEdit && name.trim() && user) {
+      const existing = await findClientByName(user.id, name.trim());
+      if (existing) {
+        return new Promise<void>((resolve) => {
+          Alert.alert('客户已存在', `客户「${existing.name}」已经存在，是否跳转编辑？`, [
+            { text: '取消', style: 'cancel', onPress: () => resolve() },
+            {
+              text: '跳转编辑',
+              onPress: () => {
+                resolve();
+                navigation.replace('ClientForm', { clientId: existing.id });
+              },
+            },
+          ]);
+        });
+      }
+    }
+
+    // 新增客户时检查手机号是否已存在
+    if (!isEdit && phone.trim() && user) {
+      const existing = await findClientByPhone(user.id, phone.trim());
+      if (existing) {
+        return new Promise<void>((resolve) => {
+          Alert.alert('手机号已存在', `手机号「${existing.phone}」已有客户「${existing.name}」在使用，是否跳转编辑？`, [
+            { text: '取消', style: 'cancel', onPress: () => resolve() },
+            {
+              text: '跳转编辑',
+              onPress: () => {
+                resolve();
+                navigation.replace('ClientForm', { clientId: existing.id });
+              },
+            },
+          ]);
+        });
+      }
     }
 
     setSaving(true);
@@ -98,7 +150,16 @@ export default function ClientFormScreen({ route, navigation }: Props) {
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}
+    >
+    <ScrollView
+      style={styles.flex}
+      contentContainerStyle={styles.content}
+      keyboardShouldPersistTaps="handled"
+    >
       <Text style={styles.label}>姓名 *</Text>
       <TextInput style={styles.input} value={name} onChangeText={setName} placeholder="请输入客户姓名" />
 
@@ -150,8 +211,10 @@ export default function ClientFormScreen({ route, navigation }: Props) {
       <TextInput
         style={styles.input}
         value={birthDate}
-        onChangeText={setBirthDate}
+        onChangeText={formatBirthDate}
         placeholder="YYYY-MM-DD"
+        keyboardType="number-pad"
+        maxLength={10}
       />
 
       <Text style={styles.label}>备注</Text>
@@ -172,11 +235,13 @@ export default function ClientFormScreen({ route, navigation }: Props) {
         <Text style={styles.saveButtonText}>{saving ? '保存中...' : '保存'}</Text>
       </TouchableOpacity>
     </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f5f5f5' },
+  flex: { flex: 1 },
   content: { padding: 16, paddingBottom: 40 },
   label: { fontSize: 14, color: '#666', marginTop: 16, marginBottom: 6 },
   hint: { fontSize: 12, color: '#999', marginBottom: 4 },

@@ -1,9 +1,11 @@
-﻿import React from 'react';
+﻿import React, { useMemo } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 import LoginScreen from '../screens/LoginScreen';
 import RegisterScreen from '../screens/RegisterScreen';
+import ForgotPasswordScreen from '../screens/ForgotPasswordScreen';
+import ResetPasswordScreen from '../screens/ResetPasswordScreen';
 import ClientListScreen from '../screens/ClientListScreen';
 import ClientDetailScreen from '../screens/ClientDetailScreen';
 import ClientFormScreen from '../screens/ClientFormScreen';
@@ -17,6 +19,8 @@ import { useAuth } from '../store/authStore';
 export type RootStackParamList = {
   Login: undefined;
   Register: undefined;
+  ForgotPassword: undefined;
+  ResetPassword: undefined;
   ClientList: undefined;
   BirthdayList: undefined;
   ClientDetail: { clientId: string };
@@ -30,12 +34,32 @@ export type RootStackParamList = {
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export default function AppNavigator() {
-  const { user } = useAuth();
+  const { user, isPasswordResetMode } = useAuth();
+
+  const linking = useMemo(() => ({
+    prefixes: ['insurancecrm://'],
+    config: {
+      screens: {
+        ResetPassword: 'reset-password',
+      },
+    },
+  }), []);
+
+  // During password-reset flow, keep the auth stack visible so
+  // ResetPasswordScreen can complete before switching to the main app.
+  const showAuthStack = !user || isPasswordResetMode;
 
   return (
-    <NavigationContainer>
+    <NavigationContainer linking={linking}>
       <Stack.Navigator>
-        {user ? (
+        {showAuthStack ? (
+          <>
+            <Stack.Screen name="Login" component={LoginScreen} options={{ title: '登录' }} />
+            <Stack.Screen name="Register" component={RegisterScreen} options={{ title: '注册' }} />
+            <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} options={{ title: '找回密码' }} />
+            <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} options={{ title: '重置密码', headerShown: false }} />
+          </>
+        ) : (
           <>
             <Stack.Screen
               name="ClientList"
@@ -84,11 +108,6 @@ export default function AppNavigator() {
               component={SpouseRelationFormScreen}
               options={{ title: '添加伴侣关系' }}
             />
-          </>
-        ) : (
-          <>
-            <Stack.Screen name="Login" component={LoginScreen} options={{ title: '登录' }} />
-            <Stack.Screen name="Register" component={RegisterScreen} options={{ title: '注册' }} />
           </>
         )}
       </Stack.Navigator>
