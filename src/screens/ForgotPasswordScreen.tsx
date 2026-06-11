@@ -24,13 +24,19 @@ export default function ForgotPasswordScreen({ navigation }: any) {
 
     setLoading(true);
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-        redirectTo: 'insurancecrm://reset-password',
-      });
+      const { error } = await supabase.auth.resetPasswordForEmail(
+        email.trim(),
+        {
+          redirectTo: 'insurancecrm://reset-password',
+        }
+      );
       if (error) throw error;
 
       setSent(true);
-      Alert.alert('发送成功', '密码重置链接已发送到您的邮箱，请查收并点击链接重置密码。');
+      Alert.alert(
+        '发送成功',
+        '密码重置链接已发送到您的邮箱，请查收并点击链接重置密码。'
+      );
     } catch (err: any) {
       Alert.alert('发送失败', err?.message || '未知错误');
     } finally {
@@ -46,7 +52,9 @@ export default function ForgotPasswordScreen({ navigation }: any) {
       <View style={styles.content}>
         <Text style={styles.title}>找回密码</Text>
         <Text style={styles.subtitle}>
-          {sent ? '重置链接已发送，请前往邮箱查看。' : '输入注册邮箱，我们将发送密码重置链接。'}
+          {sent
+            ? '重置链接已发送，请前往邮箱查看。'
+            : '输入注册邮箱，我们将发送密码重置链接。'}
         </Text>
 
         <TextInput
@@ -66,7 +74,9 @@ export default function ForgotPasswordScreen({ navigation }: any) {
             onPress={handleReset}
             disabled={loading}
           >
-            <Text style={styles.buttonText}>{loading ? '发送中...' : '发送重置链接'}</Text>
+            <Text style={styles.buttonText}>
+              {loading ? '发送中...' : '发送重置链接'}
+            </Text>
           </TouchableOpacity>
         ) : (
           <TouchableOpacity
@@ -108,5 +118,10 @@ const styles = StyleSheet.create({
   },
   buttonDisabled: { opacity: 0.65 },
   buttonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
-  linkText: { marginTop: 18, textAlign: 'center', color: '#007AFF', fontSize: 14 },
+  linkText: {
+    marginTop: 18,
+    textAlign: 'center',
+    color: '#007AFF',
+    fontSize: 14,
+  },
 });

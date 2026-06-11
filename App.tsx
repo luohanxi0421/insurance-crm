@@ -19,10 +19,14 @@ function App() {
   const initialized = useRef(false);
 
   const handlePasswordResetUrl = (url: string | null) => {
-    if (!url || !url.includes('reset-password')) return;
+    if (!url) return;
+    console.log('🚨 2. 进入处理函数的URL:', url); // 👈 加这一行
 
+    // Supabase sends reset-password deep links as insurancecrm://#access_token=xxx&type=recovery&...
+    // The fragment contains type=recovery, not the path 'reset-password'.
     const fragment = url.split('#')[1];
-    if (!fragment) return;
+    console.log('🚨 3. 截取到的fragment:', fragment); // 👈 加这一行
+    if (!fragment || !fragment.includes('type=recovery')) return;
 
     try {
       const params = new URLSearchParams(fragment);
@@ -31,46 +35,56 @@ function App() {
       if (!accessToken || !refreshToken) return;
 
       setPasswordResetMode(true);
-      supabase.auth.setSession({
-        access_token: accessToken,
-        refresh_token: refreshToken,
-      }).catch(() => {
-        setPasswordResetMode(false);
-      });
+      supabase.auth
+        .setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken,
+        })
+        .catch(() => {
+          setPasswordResetMode(false);
+        });
     } catch {
       // Invalid URL – ignore, user can request a new reset link.
     }
   };
 
-  useEffect(() => {
-    if (initialized.current) return;
-    initialized.current = true;
-    initialize();
-  }, [initialize]);
-
-  // Capture the initial deep-link URL before React Navigation consumes it.
+  // Capture the initial deep-link URL and process it BEFORE initialize()
+  // to avoid a race: initialize() sets loading=false → AppNavigator renders Login,
+  // but by the time setPasswordResetMode(true) fires, it's too late.
   useEffect(() => {
     Linking.getInitialURL().then((url) => {
+      console.log('🚨 1. 收到的原始URL:', url); // 👈 加这一行
+      setInitialUrl(url);
+      handlePasswordResetUrl(url);
+
+      // Now that we've processed the deep link, initialize auth.
+      if (!initialized.current) {
+        initialized.current = true;
+        initialize();
+      }
+    });
+
+    // ② 热启动：App 在后台时点击链接（你现在缺少这段！）
+    const subscription = Linking.addEventListener('url', ({ url }) => {
+      console.log('🚨 1b. 后台唤醒收到的URL:', url);
       setInitialUrl(url);
       handlePasswordResetUrl(url);
     });
-
-    // Also listen for URLs when the app is already running.
-    const sub = Linking.addEventListener('url', ({ url }) => {
-      handlePasswordResetUrl(url);
-    });
-    return () => sub.remove();
+    return () => subscription.remove();
   }, []);
 
   // Listen for auth state changes (session expiry, token refresh, etc.).
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        setUser(session?.user ?? null);
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        setPasswordResetMode(true);
       }
-    );
+      setUser(session?.user ?? null);
+    });
     return () => subscription.unsubscribe();
-  }, [setUser]);
+  }, [setUser, setPasswordResetMode]);
 
   if (loading) {
     return (

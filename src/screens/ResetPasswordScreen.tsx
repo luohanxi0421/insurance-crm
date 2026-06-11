@@ -25,20 +25,25 @@ export default function ResetPasswordScreen() {
   useEffect(() => {
     // If App.tsx already handled the deep link and set the recovery session,
     // show the password form directly.
+    console.log('🔍 [Reset] isPasswordResetMode:', isPasswordResetMode);
     if (isPasswordResetMode) {
       setReady(true);
+      setError(null);
       return;
     }
 
     // Otherwise, try reading the URL from our early cache.
     try {
       const initialUrl = getInitialUrl();
+      console.log('🔍 [Reset] 获取到的URL:', initialUrl);
       if (!initialUrl || !initialUrl.includes('reset-password')) {
+        console.log('❌ [Reset] URL不包含reset-password');
         setError('未检测到重置链接，请通过邮箱中的链接打开此页面。');
         return;
       }
 
       const fragment = initialUrl.split('#')[1];
+      console.log('🔍 [Reset] Fragment(#后面部分):', fragment);
       if (!fragment) {
         setError('重置链接格式无效，请重新获取重置链接。');
         return;
@@ -47,7 +52,10 @@ export default function ResetPasswordScreen() {
       const params = new URLSearchParams(fragment);
       const accessToken = params.get('access_token');
       const refreshToken = params.get('refresh_token');
-
+      console.log('🔍 [Reset] 解析出的Token:', {
+        accessToken: !!accessToken,
+        refreshToken: !!refreshToken,
+      });
       if (!accessToken || !refreshToken) {
         setError('重置链接格式无效，请重新获取重置链接。');
         return;
@@ -55,15 +63,18 @@ export default function ResetPasswordScreen() {
 
       setPasswordResetMode(true);
 
-      supabase.auth.setSession({
-        access_token: accessToken,
-        refresh_token: refreshToken,
-      }).then(() => {
-        setReady(true);
-      }).catch((err: any) => {
-        setPasswordResetMode(false);
-        setError(err?.message || '链接验证失败，请重新获取重置链接。');
-      });
+      supabase.auth
+        .setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken,
+        })
+        .then(() => {
+          setReady(true);
+        })
+        .catch((err: any) => {
+          setPasswordResetMode(false);
+          setError(err?.message || '链接验证失败，请重新获取重置链接。');
+        });
     } catch {
       setError('链接验证失败，请重新获取重置链接。');
     }
@@ -153,7 +164,9 @@ export default function ResetPasswordScreen() {
           onPress={handleReset}
           disabled={saving}
         >
-          <Text style={styles.buttonText}>{saving ? '重置中...' : '重置密码'}</Text>
+          <Text style={styles.buttonText}>
+            {saving ? '重置中...' : '重置密码'}
+          </Text>
         </TouchableOpacity>
       </View>
     </KeyboardAvoidingView>
@@ -162,7 +175,11 @@ export default function ResetPasswordScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f5f5f5' },
-  center: { justifyContent: 'center', alignItems: 'center', paddingHorizontal: 28 },
+  center: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 28,
+  },
   content: { flex: 1, justifyContent: 'center', paddingHorizontal: 28 },
   title: { fontSize: 30, fontWeight: '700', color: '#222', marginBottom: 8 },
   subtitle: { fontSize: 14, color: '#777', marginBottom: 32, lineHeight: 22 },
@@ -185,5 +202,10 @@ const styles = StyleSheet.create({
   buttonDisabled: { opacity: 0.65 },
   buttonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
   loadingText: { marginTop: 16, fontSize: 14, color: '#888' },
-  errorText: { fontSize: 15, color: '#d32f2f', textAlign: 'center', lineHeight: 22 },
+  errorText: {
+    fontSize: 15,
+    color: '#d32f2f',
+    textAlign: 'center',
+    lineHeight: 22,
+  },
 });

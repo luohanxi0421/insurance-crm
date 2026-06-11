@@ -1,5 +1,5 @@
-﻿import React, { useMemo } from 'react';
-import { NavigationContainer } from '@react-navigation/native';
+﻿import React, { useEffect } from 'react';
+import { NavigationContainer, NavigationContainerRef } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 import LoginScreen from '../screens/LoginScreen';
@@ -33,24 +33,27 @@ export type RootStackParamList = {
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
+export const navigationRef = React.createRef<NavigationContainerRef<RootStackParamList>>();
+
 export default function AppNavigator() {
   const { user, isPasswordResetMode } = useAuth();
 
-  const linking = useMemo(() => ({
-    prefixes: ['insurancecrm://'],
-    config: {
-      screens: {
-        ResetPassword: 'reset-password',
-      },
-    },
-  }), []);
+  // When password-reset mode activates, navigate to ResetPassword screen.
+  useEffect(() => {
+    if (isPasswordResetMode && navigationRef.current) {
+      navigationRef.current.reset({
+        index: 0,
+        routes: [{ name: 'ResetPassword' }],
+      });
+    }
+  }, [isPasswordResetMode]);
 
   // During password-reset flow, keep the auth stack visible so
   // ResetPasswordScreen can complete before switching to the main app.
   const showAuthStack = !user || isPasswordResetMode;
 
   return (
-    <NavigationContainer linking={linking}>
+    <NavigationContainer ref={navigationRef}>
       <Stack.Navigator>
         {showAuthStack ? (
           <>

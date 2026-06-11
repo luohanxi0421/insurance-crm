@@ -20,6 +20,14 @@ export const useAuth = create<AuthStore>((set) => ({
   initialize: async () => {
     set({ loading: true });
     try {
+      // If we're in password-reset mode (set by deep-link processing),
+      // skip auth check — the recovery session is already handled by App.tsx.
+      const currentState = useAuth.getState();
+      if (currentState.isPasswordResetMode) {
+        set({ loading: false });
+        return;
+      }
+
       // First try restoring session from local storage (fast, no network).
       const { data: sessionData } = await supabase.auth.getSession();
       if (!sessionData.session) {
