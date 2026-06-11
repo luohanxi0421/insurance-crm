@@ -7,6 +7,8 @@ import {
   ScrollView,
   StyleSheet,
   Alert,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { RouteProp } from '@react-navigation/native';
 import { RootStackParamList } from '../navigation/AppNavigator';
@@ -87,6 +89,17 @@ export default function VisitFormScreen({ route, navigation }: Props) {
     setGifts((prev) => prev.filter((_, idx) => idx !== index));
   };
 
+  /** Format raw date input: YYYYMMDD → YYYY-MM-DD as the user types */
+  const formatVisitDate = (text: string): string => {
+    // Strip everything except digits
+    const digits = text.replace(/\D/g, '');
+
+    if (digits.length === 0) return '';
+    if (digits.length <= 4) return digits;
+    if (digits.length <= 6) return `${digits.slice(0, 4)}-${digits.slice(4)}`;
+    return `${digits.slice(0, 4)}-${digits.slice(4, 6)}-${digits.slice(6, 8)}`;
+  };
+
   const validDate = (raw: string) => /^\d{4}-\d{2}-\d{2}$/.test(raw);
 
   const handleSave = async () => {
@@ -164,126 +177,137 @@ export default function VisitFormScreen({ route, navigation }: Props) {
   }
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Text style={styles.label}>拜访日期</Text>
-      <TextInput
-        style={styles.input}
-        value={visitDate}
-        onChangeText={setVisitDate}
-        placeholder="YYYY-MM-DD"
-      />
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 80 : 0}
+    >
+      <ScrollView
+        contentContainerStyle={styles.content}
+        keyboardShouldPersistTaps="handled"
+      >
+        <Text style={styles.label}>拜访日期</Text>
+        <TextInput
+          style={styles.input}
+          value={visitDate}
+          onChangeText={(text) => setVisitDate(formatVisitDate(text))}
+          placeholder="YYYY-MM-DD 或 YYYYMMDD"
+          keyboardType="number-pad"
+          maxLength={10}
+        />
 
-      <Text style={styles.label}>拜访内容 *</Text>
-      <TextInput
-        style={[styles.input, styles.textArea]}
-        value={content}
-        onChangeText={setContent}
-        placeholder="请输入沟通内容"
-        multiline
-        numberOfLines={8}
-      />
+        <Text style={styles.label}>拜访内容 *</Text>
+        <TextInput
+          style={[styles.input, styles.textArea]}
+          value={content}
+          onChangeText={setContent}
+          placeholder="请输入沟通内容"
+          multiline
+          numberOfLines={8}
+        />
 
-      <Text style={styles.label}>备注</Text>
-      <TextInput
-        style={[styles.input, styles.textArea]}
-        value={notes}
-        onChangeText={setNotes}
-        placeholder="请输入补充备注"
-        multiline
-        numberOfLines={3}
-      />
+        <Text style={styles.label}>备注</Text>
+        <TextInput
+          style={[styles.input, styles.textArea]}
+          value={notes}
+          onChangeText={setNotes}
+          placeholder="请输入补充备注"
+          multiline
+          numberOfLines={3}
+        />
 
-      <View style={styles.section}>
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>礼品记录</Text>
-          <TouchableOpacity onPress={addGiftRow}>
-            <Text style={styles.linkText}>+ 添加礼品</Text>
-          </TouchableOpacity>
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>礼品记录</Text>
+            <TouchableOpacity onPress={addGiftRow}>
+              <Text style={styles.linkText}>+ 添加礼品</Text>
+            </TouchableOpacity>
+          </View>
+
+          {gifts.map((gift, index) => (
+            <View key={index} style={styles.giftCard}>
+              <View style={styles.giftCardHeader}>
+                <Text style={styles.giftCardTitle}>礼品 {index + 1}</Text>
+                {gifts.length > 1 ? (
+                  <TouchableOpacity onPress={() => removeGiftRow(index)}>
+                    <Text style={styles.deleteText}>删除</Text>
+                  </TouchableOpacity>
+                ) : null}
+              </View>
+
+              <TextInput
+                style={styles.input}
+                value={gift.gift_name}
+                onChangeText={(value) => updateGift(index, 'gift_name', value)}
+                placeholder="礼品名称"
+              />
+
+              <View style={styles.row}>
+                <View style={styles.halfField}>
+                  <TextInput
+                    style={styles.input}
+                    value={gift.quantity}
+                    onChangeText={(value) => updateGift(index, 'quantity', value)}
+                    placeholder="数量"
+                    keyboardType="number-pad"
+                  />
+                </View>
+                <View style={styles.halfField}>
+                  <TextInput
+                    style={styles.input}
+                    value={gift.price}
+                    onChangeText={(value) => updateGift(index, 'price', value)}
+                    placeholder="价格（选填）"
+                    keyboardType="decimal-pad"
+                  />
+                </View>
+              </View>
+
+              <View style={styles.row}>
+                <TouchableOpacity
+                  style={[
+                    styles.choiceButton,
+                    gift.delivery_type === 'in_person' && styles.choiceButtonActive,
+                  ]}
+                  onPress={() => updateGift(index, 'delivery_type', 'in_person')}
+                >
+                  <Text
+                    style={[
+                      styles.choiceText,
+                      gift.delivery_type === 'in_person' && styles.choiceTextActive,
+                    ]}
+                  >
+                    当面赠送
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    styles.choiceButton,
+                    gift.delivery_type === 'mailed' && styles.choiceButtonActive,
+                  ]}
+                  onPress={() => updateGift(index, 'delivery_type', 'mailed')}
+                >
+                  <Text
+                    style={[
+                      styles.choiceText,
+                      gift.delivery_type === 'mailed' && styles.choiceTextActive,
+                    ]}
+                  >
+                    邮寄
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          ))}
         </View>
 
-        {gifts.map((gift, index) => (
-          <View key={index} style={styles.giftCard}>
-            <View style={styles.giftCardHeader}>
-              <Text style={styles.giftCardTitle}>礼品 {index + 1}</Text>
-              {gifts.length > 1 ? (
-                <TouchableOpacity onPress={() => removeGiftRow(index)}>
-                  <Text style={styles.deleteText}>删除</Text>
-                </TouchableOpacity>
-              ) : null}
-            </View>
-
-            <TextInput
-              style={styles.input}
-              value={gift.gift_name}
-              onChangeText={(value) => updateGift(index, 'gift_name', value)}
-              placeholder="礼品名称"
-            />
-
-            <View style={styles.row}>
-              <View style={styles.halfField}>
-                <TextInput
-                  style={styles.input}
-                  value={gift.quantity}
-                  onChangeText={(value) => updateGift(index, 'quantity', value)}
-                  placeholder="数量"
-                  keyboardType="number-pad"
-                />
-              </View>
-              <View style={styles.halfField}>
-                <TextInput
-                  style={styles.input}
-                  value={gift.price}
-                  onChangeText={(value) => updateGift(index, 'price', value)}
-                  placeholder="价格（选填）"
-                  keyboardType="decimal-pad"
-                />
-              </View>
-            </View>
-
-            <View style={styles.row}>
-              <TouchableOpacity
-                style={[
-                  styles.choiceButton,
-                  gift.delivery_type === 'in_person' && styles.choiceButtonActive,
-                ]}
-                onPress={() => updateGift(index, 'delivery_type', 'in_person')}
-              >
-                <Text
-                  style={[
-                    styles.choiceText,
-                    gift.delivery_type === 'in_person' && styles.choiceTextActive,
-                  ]}
-                >
-                  当面赠送
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[
-                  styles.choiceButton,
-                  gift.delivery_type === 'mailed' && styles.choiceButtonActive,
-                ]}
-                onPress={() => updateGift(index, 'delivery_type', 'mailed')}
-              >
-                <Text
-                  style={[
-                    styles.choiceText,
-                    gift.delivery_type === 'mailed' && styles.choiceTextActive,
-                  ]}
-                >
-                  邮寄
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        ))}
-      </View>
-
-      <TouchableOpacity style={[styles.saveButton, saving && styles.saveButtonDisabled]} onPress={handleSave}>
-        <Text style={styles.saveButtonText}>
-          {saving ? '保存中...' : isEdit ? '保存修改' : '保存拜访'}
-        </Text>
-      </TouchableOpacity>
-    </ScrollView>
+        <TouchableOpacity style={[styles.saveButton, saving && styles.saveButtonDisabled]} onPress={handleSave}>
+          <Text style={styles.saveButtonText}>
+            {saving ? '保存中...' : isEdit ? '保存修改' : '保存拜访'}
+          </Text>
+        </TouchableOpacity>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
